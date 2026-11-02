@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "width": 4000,
+  "depth": 3000,
+  "height": 2500,
+  "module": 1000,
+  "left": true,
+  "right": false,
+  "thickness": 80,
+  "inset": 20,
+  "finish": 30,
+  "bleed": 10,
+  "safe": 40,
+  "maxPrint": 1600,
+  "projectName": "Sample exhibition concept",
+  "email": "",
+  "notes": "Confirm substrate, frame system, corner joints and attachment method with supplier.",
+  "panels": {},
+  "objects": [
+    {
+      "id": "table-1",
+      "type": "table",
+      "x": 2550,
+      "z": 1900,
+      "rot": 0
+    },
+    {
+      "id": "chair-1",
+      "type": "chair",
+      "x": 2550,
+      "z": 2600,
+      "rot": 180
+    }
+  ],
+  "environment": "hall"
+}

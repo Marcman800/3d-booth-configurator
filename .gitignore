@@ -1,0 +1,21 @@
+# Dependencies and generated bundle
+node_modules/
+dist/app.js
+coverage/
+*.log
+
+# Private local projects, reviews and uploads
+.local-data/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Machine-specific hosting metadata
+.openai/
+
+# OS/editor files
+.DS_Store
+.idea/
+.vscode/

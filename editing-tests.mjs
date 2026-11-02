@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {defaults,panels,editPanel,validate} from './geometry.mjs';
+import {History} from './editing.mjs';
+import {snapshotBase,encodeSnapshot,decodeSnapshot} from './share.mjs';
+const s=defaults();editPanel(s,'B-01','height',1250);validate(s);let p=panels(s)[0];assert.equal(p.h,1250);assert.equal(p.visibleH,1210);assert.equal(p.cutH,1270);assert.equal(p.artH,1290);
+editPanel(s,'B-01','width',750);validate(s);assert.equal(panels(s)[1].w,1250);assert.equal(panels(s).filter(p=>p.wall==='B').reduce((n,p)=>n+p.w,0),4000);
+s.panels['B-01']={color:'#123456'};editPanel(s,'B-01','split');validate(s);assert.equal(panels(s)[0].w,375);assert.equal(panels(s)[1].h,1250);assert.equal(s.panels[panels(s)[1].id],undefined);editPanel(s,'B-01','merge');validate(s);assert.equal(panels(s)[0].w,750);
+const before=structuredClone(s);editPanel(s,'B-01','width',4000);assert.throws(()=>validate(s));assert.throws(()=>validate({...before,width:5000}));assert.throws(()=>validate({...before,wallLayouts:{B:[]}}));
+const share=await decodeSnapshot(await encodeSnapshot(snapshotBase(before)));assert.deepEqual(panels(share),panels(before));
+const h=new History();h.reset(defaults());h.record(before);assert.equal(h.undo().wallLayouts,undefined);assert.deepEqual(h.redo().wallLayouts,before.wallLayouts);h.undo();h.record({...defaults(),width:5000});assert.equal(h.redo(),null);assert.equal(h.record({...defaults(),width:5000}),false);
+const limit=new History(2);limit.reset({v:0});for(let i=1;i<6;i++)limit.record({v:i});assert.equal(limit.past.length,2);
+console.log('Mixed-height allowances, width conservation, split/merge, invalid layouts, shared snapshots and history checks passed.');

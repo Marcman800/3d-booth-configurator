@@ -1,0 +1,25 @@
+{
+  "name": "booth-studio",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "esbuild app.mjs --bundle --format=esm --minify --outfile=dist/app.js",
+    "test": "node tests.mjs && node share-tests.mjs && node model-tests.mjs && node editing-tests.mjs && node branding-tests.mjs && node local-tests.mjs && node dragging-tests.mjs && node saving-tests.mjs",
+    "dev": "node server.mjs",
+    "local": "node server.mjs",
+    "start": "node server.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "description": "AI-assisted local 3D exhibition booth configurator with branded concept PDFs and revision reviews.",
+  "type": "module",
+  "dependencies": {
+    "esbuild": "^0.25.11",
+    "jspdf": "^4.2.1",
+    "three": "^0.180.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
+}
