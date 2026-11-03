@@ -4,7 +4,7 @@ export function snapshotBase(project){
  if(project.objects.some(o=>o.type==='glb'))throw Error('Snapshot links do not yet include uploaded 3D models. Share the PDF and project JSON to preserve this design.');
  const d=defaults();
  for(const key of Object.keys(d))if(!['email','notes','panels','objects'].includes(key))d[key]=project[key];
- d.environment=project.environment||'hall';
+ d.environment=project.environment||'hall';if(project.lighting)d.lighting=structuredClone(project.lighting);
  d.projectName=String(project.projectName||'Booth design').slice(0,80);
  d.email='';d.notes='Shared visual snapshot. Artwork is reduced-resolution preview material; not for production.';
  d.objects=project.objects.map(({id,type,x,z,rot,y})=>({id,type,x,z,rot,y:y||0}));d.panels={};if(project.wallLayouts)d.wallLayouts=structuredClone(project.wallLayouts);

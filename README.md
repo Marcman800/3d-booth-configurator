@@ -9,8 +9,9 @@ Built iteratively with assistance from OpenAI Codex/ChatGPT for implementation, 
 - Booth dimensions in millimetres, modular panels, individual panel widths and half-height walls.
 - Artwork uploads, furniture and self-contained GLB model imports.
 - Click-to-select and drag-to-move, grid snapping, rotation, undo/redo and precise numeric positioning.
-- A starter library with shelves, plinths, flyers, overhead banners and pull-up banners; selected props accept artwork.
+- A starter library with shelves, plinths, flyers, overhead banners, pull-up banners, reception podiums, timber-leg bar chairs, round bar tables and wall-mounted TVs; selected props accept artwork.
 - Exhibition-hall and plain-studio settings, orbit and walk views.
+- Downloadable 15- or 20-second 360° orbit videos, with preview and cancellation.
 - Company-branded concept PDFs with multiple views and an optional technical specification appendix.
 - Local named projects, duplication, archiving, backup import/export and browser recovery drafts.
 - Frozen review revisions with feedback, change requests, concept approvals and revocable local links.
@@ -115,3 +116,31 @@ Dependencies: Three.js, jsPDF and esbuild. Google Fonts is optional; system font
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development checks and [SECURITY.md](SECURITY.md) for the local-only security model.
 
 No open-source licence has been selected yet. Package metadata is `UNLICENSED`; public visibility is not a grant of reuse rights. Select and add a licence before presenting this as an open-source release. Third-party dependencies retain their respective licences.
+
+## Record a 360° tour
+
+Click **Video & screenshots**, choose HD (720p), Full HD (1080p) or 4K (2160p), select MP4 or WebM and choose 15 or 20 seconds. Keep the tab visible. Preview the video before downloading. Recording targets up to 30 fps; 4K needs more GPU power and can drop frames. MP4 is available only when the browser supports recording it; unsupported choices show a message instead of silently returning a different format. No audio, microphone, external encoder or server upload is used. Higher resolution is rendered directly from the 3D scene, not AI upscaling; it cannot recover detail missing from uploaded artwork.
+
+The same dialog downloads PNG screenshots at the selected resolution, from the current view or front, back, left, right, top and perspective angles. Preset views frame the booth plus equipment; outer walls may occlude the interior.
+
+Use **Lighting** for brightness, neutral/warm/cool light, direction and cast shadows. Settings save with projects and review snapshots and affect PDF views and media exports. **Setting** offers Exhibition hall, Plain studio, Dark backdrop and Sky backdrop; the latter two are colour backdrops, not new modelled venues.
+
+Recording waits for model/artwork loading and uses a separate camera/renderer. Editor controls and selection outlines are excluded, and the editing camera is unchanged. The current hall/studio setting is included. Hidden tabs, cancellation or closing the dialog stop recording without offering a partial download. Unsupported browsers show an explanatory message. Download before reloading or starting another recording, as the preview exists only in memory.
+
+This is a conventional orbit video, not interactive spherical/VR footage. Outer walls remain blank and may occlude the booth interior. Extremely large or outlying objects can make the framing wide or extend beyond the decorative hall. No branded video overlay, soundtrack or guaranteed MP4 conversion is provided. Automated tests cover format fallback and a complete camera orbit; browser checks completed 15-second WebM and Full HD MP4 recordings and a 3840 × 2160 PNG download.
+
+### Reference-style furniture
+
+The free library includes a white reception podium (front artwork supported), timber-leg bar chair, round pedestal bar table and wall-mounted TV. Select an item in Furnish to edit its dimensions in millimetres and base elevation. Unlock proportions to change individual dimensions. TV dimensions describe the outer casing, not the screen diagonal; placement is manual and does not follow wall edits. These are approximate concept models, not manufacturer specifications or verified mounting/print templates.
+
+
+## Editing workflow
+
+- **Furnish → Objects & layout:** click a name to select it; check multiple rows to group, ungroup, lock, unlock or align them. Groups translate together while dragging and when editing X/Z/base elevation. Rotation and scaling remain per item. Locking any member prevents moving the group. Duplicates start unlocked and ungrouped.
+- Align checked objects to a common horizontal centre/depth or against a wall. Side-wall alignment requires that wall to be enabled. Alignment acts on checked items individually.
+- **Place active item on:** choose a support and place the active item at its bounding-box top. This checks the rectangular footprint, not the actual support surface. Hollow shelves, irregular GLBs and grouped items need visual review; there is no persistent wall/table attachment or load validation.
+- **Prop artwork:** replace PNG/JPEG artwork (up to 2 MB) or choose Blank surface on placed library podiums, plinths, flyers and banners. Edits preserve transforms and affect only that instance, including when a model is duplicated. Arbitrary uploaded GLBs do not expose editable artwork surfaces. Library asset limits still apply.
+- **Saved views:** save up to 12 named camera positions, recall or remove them. Saved angles appear in the screenshot menu. They persist in project backups and review snapshots; the PDF uses its standard view set and orbit videos retain their standard path.
+- **Viewer quality:** Fast editing uses one pixel per display pixel and disables viewport shadows. Quality editing restores higher display resolution and shadows. PDF, screenshot and video exports use their own settings.
+
+Position, rotation, naming, organisation and lighting changes reuse scene geometry. Geometry/artwork edits still rebuild the scene; this is an incremental performance improvement, not a complete renderer rewrite. Group/lock state and saved cameras are optional fields, so older project files remain compatible. The built-in table's specified height is corrected to 770 mm to match its visible tabletop.

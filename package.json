@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "build": "esbuild app.mjs --bundle --format=esm --minify --outfile=dist/app.js",
-    "test": "node tests.mjs && node share-tests.mjs && node model-tests.mjs && node editing-tests.mjs && node branding-tests.mjs && node local-tests.mjs && node dragging-tests.mjs && node saving-tests.mjs",
+    "test": "node tests.mjs && node share-tests.mjs && node model-tests.mjs && node editing-tests.mjs && node branding-tests.mjs && node local-tests.mjs && node dragging-tests.mjs && node saving-tests.mjs && node tour-tests.mjs && node workflow-tests.mjs",
     "dev": "node server.mjs",
     "local": "node server.mjs",
     "start": "node server.mjs"

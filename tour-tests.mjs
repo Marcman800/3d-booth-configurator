@@ -6,3 +6,6 @@ assert.equal(recordingFormat({isTypeSupported:t=>t==='video/mp4'}),'video/mp4');
 assert.equal(recordingFormat({isTypeSupported:()=>true}),'video/webm;codecs=vp9');
 const c=new Vector3(2,1,3),start=orbitPosition(c,8,3,0),end=orbitPosition(c,8,3,1);assert.ok(start.distanceTo(end)<1e-10);
 for(const p of [0,.25,.5,.75,1]){const v=orbitPosition(c,8,3,p);assert.equal(v.y,4);assert.ok(Math.abs(Math.hypot(v.x-c.x,v.z-c.z)-8)<1e-10);}console.log('Recorder format fallback and full-orbit camera path passed.');
+assert.equal(recordingFormat({isTypeSupported:()=>true},'mp4'),'video/mp4');
+assert.equal(recordingFormat({isTypeSupported:t=>t.includes('webm')},'mp4'),null);
+assert.equal(recordingFormat({isTypeSupported:()=>true},'webm'),'video/webm;codecs=vp9');

@@ -16,3 +16,7 @@ header .project{display:none}header .brand{margin-right:auto}header button{paddi
 .workspaceTabs{display:flex;gap:8px;margin:18px 0}.workspaceTabs button[aria-pressed=true]{background:#294b36;color:white}.collaborationDialog section[hidden]{display:none}
 
 .canvasbar{flex-wrap:wrap;height:auto;gap:8px}.canvasbar .seg{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.environmentLabel{margin:0!important;font-size:11px;display:flex;gap:6px;align-items:center}.environmentLabel select{margin:0;width:auto;padding:7px;font-size:12px}
+
+header{height:auto;min-height:86px;flex-wrap:wrap;padding-top:12px;padding-bottom:12px;flex-shrink:0}
+
+header select[aria-label="Viewer quality"]{width:auto;max-width:180px;margin:0} [data-list]>div{display:flex;align-items:center;gap:8px;margin:6px 0} [data-list] input[type="checkbox"]{width:auto;margin:0} [data-list] button{text-align:left;flex:1}
