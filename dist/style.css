@@ -20,3 +20,15 @@ header .project{display:none}header .brand{margin-right:auto}header button{paddi
 header{height:auto;min-height:86px;flex-wrap:wrap;padding-top:12px;padding-bottom:12px;flex-shrink:0}
 
 header select[aria-label="Viewer quality"]{width:auto;max-width:180px;margin:0} [data-list]>div{display:flex;align-items:center;gap:8px;margin:6px 0} [data-list] input[type="checkbox"]{width:auto;margin:0} [data-list] button{text-align:left;flex:1}
+
+.floatingEditor{position:fixed;right:20px;top:150px;width:360px;max-width:calc(100vw - 16px);z-index:40;background:#fff;border:1px solid #ccd4c6;border-radius:14px;box-shadow:0 14px 45px #17251b33;overflow:hidden}
+.floatingEditor[hidden],.floatingEditorBody[hidden]{display:none}
+.floatingEditorHead{display:flex;align-items:center;gap:6px;padding:12px 14px;background:#edf0e7;cursor:move;touch-action:none}
+.floatingEditorHead strong{flex:1;min-width:0;overflow-wrap:anywhere}.floatingEditorHead button{padding:5px 10px;font-size:18px}
+.floatingEditorBody{padding:0 18px 18px;max-height:calc(100vh - 230px);overflow:auto;overscroll-behavior:contain}.floatingEditorBody h2{font-size:17px;margin-top:20px}.floatingEditorBody label{display:block;margin:12px 0}.floatingEditorBody input,.floatingEditorBody select{max-width:100%}.floatingEditorBody .check{display:flex}.floatingEditorBody .check input{width:auto}
+@media(max-width:600px){.floatingEditor{top:100px;right:8px;width:calc(100vw - 16px)}.floatingEditorBody{max-height:calc(100dvh - 180px)}}
+
+.floatingEditorBody label:has(#panelWidth),.floatingEditorBody label:has(#panelHeight){display:inline-block;width:48%;vertical-align:top;margin-right:1%}.floatingEditorBody .hint{font-size:12px}.floatingEditorBody input,.floatingEditorBody select{padding:8px}.floatingEditorBody .info{padding:8px;margin:8px 0}
+.floatingEditorBody #objectFields>p:first-child{display:none}
+.floatingEditorBody label:has(#ox),.floatingEditorBody label:has(#oz),.floatingEditorBody label:has(#rot),.floatingEditorBody label:has(#oy){display:inline-block;width:48%;margin-right:1%;vertical-align:top}
+.floatingEditorBody label:has(#mw),.floatingEditorBody label:has(#mh),.floatingEditorBody label:has(#md){display:inline-block;width:31%;margin-right:1%;vertical-align:top}

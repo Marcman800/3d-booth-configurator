@@ -11,7 +11,7 @@ export function mountCollaboration({getProject,loadReview,addLibrary,toast,setPr
  let pendingSave;
  const saveCurrent=()=>{if(pendingSave)return pendingSave;saveStarted();const project=getProject();pendingSave=(async()=>{try{const saved=await api('projects',{project});markSaved(saved.project);return saved;}catch(e){saveFailed(e);throw e;}finally{pendingSave=null;}})();return pendingSave;};
  const open=async()=>{const data=await api('workspace');dialog.replaceChildren();action('Close',dialog,()=>dialog.close());el('h1','Your concept workspace',dialog);el('p','Local evaluation · saved on this computer. Review names are self-declared, not verified identities. No payments are collected.',dialog);
- el('h2','My projects',dialog);el('p','Browser autosave protects the working draft. Save to My projects to keep a named copy on this computer. Opening or starting a project saves your current work first.',dialog);
+ el('h2','My projects',dialog);el('p','A recovery draft saves automatically in this browser. Click Save project once to create a named copy; after that, edits save to My projects on this computer when you pause for about 1.5 seconds. This is local saving, not cloud sync. Opening or starting a project saves your current work first.',dialog);
  action('Download project backup',dialog,downloadProject);
  action('Save current project',dialog,async()=>{await saveCurrent();await open();});
  action('Save as new project',dialog,async()=>{const project=getProject();delete project.workspaceId;delete project.workspaceVersion;project.projectName=(project.projectName+' — copy').slice(0,80);const saved=await api('projects',{project});await setProject(saved.project);await open();});

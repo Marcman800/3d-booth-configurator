@@ -13,7 +13,7 @@ Built iteratively with assistance from OpenAI Codex/ChatGPT for implementation, 
 - Exhibition-hall and plain-studio settings, orbit and walk views.
 - Downloadable 15- or 20-second 360° orbit videos, with preview and cancellation.
 - Company-branded concept PDFs with multiple views and an optional technical specification appendix.
-- Local named projects, duplication, archiving, backup import/export and browser recovery drafts.
+- Local named projects with automatic saving after edits pause, duplication, archiving, backup import/export and browser recovery drafts.
 - Frozen review revisions with feedback, change requests, concept approvals and revocable local links.
 - A clearly labelled Free/Studio plan demo. No payments or real subscriptions.
 
@@ -43,7 +43,7 @@ npm run build
 1. Choose booth dimensions and panels under **Space**.
 2. Add wall artwork and equipment, or use **My projects & library → Library**.
 3. Click and drag objects; use **Furnish** for dimensions, height and rotation. Drag empty space to orbit. Escape cancels a move.
-4. Click **Save project** to save to My projects. Browser recovery autosave is separate from this named save.
+4. Click **Save project** once to create a named project. Later edits auto-save to My projects after about 1.5 seconds without changes; the browser recovery draft also continues saving.
 5. Use **Brand & present** to customise and export a concept PDF.
 6. Use **Share design → Save & create review link** to freeze a version for local review.
 
@@ -51,9 +51,9 @@ Import `examples/sample-project.json` using **Import backup** for a clean exampl
 
 ## Local storage and sharing
 
-The Node server binds to `127.0.0.1`. It stores projects, revisions, review events and demo plan selection in `.local-data/reviews.json`. Back up that directory privately. `FORMA_DATA` can point to another private data directory.
+The Node server binds to `127.0.0.1`. It stores named projects, revisions, review events and demo plan selection in `.local-data/reviews.json`. Edits to a named project auto-save there after about 1.5 seconds of inactivity while the local server is running. This does not sync to another device or a cloud service. Back up that directory privately. `FORMA_DATA` can point to another private data directory.
 
-Browser IndexedDB stores the working recovery draft. Download JSON backups for portable copies; they may contain original artwork and models.
+Browser IndexedDB separately keeps the current recovery draft, including before a named project exists. The save status identifies browser recovery and named-project saves; failed saves remain visible, and version conflicts are surfaced instead of silently replacing another window's changes. Download JSON backups for portable copies; they may contain original artwork and models.
 
 **Review links work only on the same computer while this server is running.** All local visitors share one workspace. There are no accounts, owner permissions or verified reviewer identities. Do not expose or tunnel this server publicly. Deploying it safely requires authentication, access controls, upload/storage limits and operational hardening.
 
@@ -94,7 +94,7 @@ Large projects can exhaust browser or disk storage. The local server is a protot
 | `geometry.mjs` | Panel geometry, allowances and project validation |
 | `models.mjs`, `library.mjs` | GLB validation/loading and generated library models |
 | `dragging.mjs`, `environment.mjs` | Scene interaction and decorative venue |
-| `editing.mjs`, `saving.mjs` | Undo history, browser recovery and save status |
+| `editing.mjs`, `saving.mjs` | Undo history, browser recovery, named-project auto-save state and save status |
 | `collaboration.mjs`, `workspace.mjs` | Project/review UI and review status |
 | `server.mjs` | Loopback-only local persistence and review API |
 | `branding.mjs`, `share.mjs` | Proposal settings and legacy snapshot compatibility |
@@ -144,3 +144,7 @@ The free library includes a white reception podium (front artwork supported), ti
 - **Viewer quality:** Fast editing uses one pixel per display pixel and disables viewport shadows. Quality editing restores higher display resolution and shadows. PDF, screenshot and video exports use their own settings.
 
 Position, rotation, naming, organisation and lighting changes reuse scene geometry. Geometry/artwork edits still rebuild the scene; this is an incremental performance improvement, not a complete renderer rewrite. Group/lock state and saved cameras are optional fields, so older project files remain compatible. The built-in table's specified height is corrected to 770 mm to match its visible tabletop.
+
+## Floating selection editor
+
+Click a wall panel or item in the viewer to open its floating editor, or use the **Selection editor** header button. Wall size/layout and artwork share one panel. Items expose position, dimensions, prop artwork, model uploads and layout tools together. Drag the header to reposition it; use minus to collapse or × to restore the controls to the sidebar. The editor follows selection, uses existing validation and undo, and is unavailable in read-only review links.
