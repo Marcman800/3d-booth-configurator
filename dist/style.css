@@ -32,3 +32,4 @@ header select[aria-label="Viewer quality"]{width:auto;max-width:180px;margin:0} 
 .floatingEditorBody #objectFields>p:first-child{display:none}
 .floatingEditorBody label:has(#ox),.floatingEditorBody label:has(#oz),.floatingEditorBody label:has(#rot),.floatingEditorBody label:has(#oy){display:inline-block;width:48%;margin-right:1%;vertical-align:top}
 .floatingEditorBody label:has(#mw),.floatingEditorBody label:has(#mh),.floatingEditorBody label:has(#md){display:inline-block;width:31%;margin-right:1%;vertical-align:top}
+.appearanceControls{border-top:1px solid #e1e6dc;margin-top:18px;padding-top:2px}.appearanceControls h2{margin-top:16px}.appearanceControls label{display:block!important;width:auto!important}.appearanceControls input[type=color]{min-height:38px;padding:4px}.appearanceControls .upload{display:block}.appearanceControls .hint{font-size:12px}

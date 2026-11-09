@@ -7,7 +7,7 @@ export function snapshotBase(project){
  d.environment=project.environment||'hall';if(project.lighting)d.lighting=structuredClone(project.lighting);
  d.projectName=String(project.projectName||'Booth design').slice(0,80);
  d.email='';d.notes='Shared visual snapshot. Artwork is reduced-resolution preview material; not for production.';
- d.objects=project.objects.map(({id,type,x,z,rot,y})=>({id,type,x,z,rot,y:y||0}));d.panels={};if(project.wallLayouts)d.wallLayouts=structuredClone(project.wallLayouts);
+ d.objects=project.objects.map(({id,type,x,z,rot,y,appearance})=>({id,type,x,z,rot,y:y||0,...(appearance?{appearance:structuredClone(appearance)}:{})}));if(project.objectTextures)d.objectTextures=structuredClone(project.objectTextures);d.panels={};if(project.wallLayouts)d.wallLayouts=structuredClone(project.wallLayouts);
  for(const p of panels(project)){const a=project.panels[p.id];if(a?.color)d.panels[p.id]={color:a.color};}
  return d;
 }

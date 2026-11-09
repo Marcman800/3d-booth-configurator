@@ -7,7 +7,7 @@ Built iteratively with assistance from OpenAI Codex/ChatGPT for implementation, 
 ## Features
 
 - Booth dimensions in millimetres, modular panels, individual panel widths and half-height walls.
-- Artwork uploads, furniture and self-contained GLB model imports.
+- Artwork uploads, furniture, per-object colour/finish controls and image textures for UV-mapped surfaces on built-in and uploaded models.
 - Click-to-select and drag-to-move, grid snapping, rotation, undo/redo and precise numeric positioning.
 - A starter library with shelves, plinths, flyers, overhead banners, pull-up banners, reception podiums, timber-leg bar chairs, round bar tables and wall-mounted TVs; selected props accept artwork.
 - Exhibition-hall and plain-studio settings, orbit and walk views.
@@ -80,7 +80,8 @@ Banner and prop artwork is a cropped concept texture. These objects do not gener
 ## Upload limits
 
 - Wall artwork: PNG/JPEG, up to 8 MB.
-- Company logos and library prop artwork: PNG/JPEG, up to 2 MB.
+- Company logos, library prop artwork and object surface textures: PNG/JPEG, up to 2 MB each.
+- All uploaded images are checked before decoding and limited to 4,096 pixels on either edge and 12 megapixels. Object textures are limited to 12 images / 12 MB total per project and require UV-mapped model surfaces.
 - Models: embedded, uncompressed GLB 2.0; 10 MB each, 12 models and 30 MB total per project. External resources, Draco/Meshopt and KTX textures are unsupported.
 - Project requests/imports: up to 60 MB. Each revision stores a full snapshot, so disk usage grows.
 
@@ -92,7 +93,7 @@ Large projects can exhaust browser or disk storage. The local server is a protot
 | --- | --- |
 | `app.mjs` | Editor, rendering and PDF export |
 | `geometry.mjs` | Panel geometry, allowances and project validation |
-| `models.mjs`, `library.mjs` | GLB validation/loading and generated library models |
+| `models.mjs`, `library.mjs`, `appearance.mjs`, `imageAssets.mjs` | GLB validation/loading, generated models, surface appearance controls and fast image size checks |
 | `dragging.mjs`, `environment.mjs` | Scene interaction and decorative venue |
 | `editing.mjs`, `saving.mjs` | Undo history, browser recovery, named-project auto-save state and save status |
 | `collaboration.mjs`, `workspace.mjs` | Project/review UI and review status |
@@ -139,7 +140,7 @@ The free library includes a white reception podium (front artwork supported), ti
 - **Furnish → Objects & layout:** click a name to select it; check multiple rows to group, ungroup, lock, unlock or align them. Groups translate together while dragging and when editing X/Z/base elevation. Rotation and scaling remain per item. Locking any member prevents moving the group. Duplicates start unlocked and ungrouped.
 - Align checked objects to a common horizontal centre/depth or against a wall. Side-wall alignment requires that wall to be enabled. Alignment acts on checked items individually.
 - **Place active item on:** choose a support and place the active item at its bounding-box top. This checks the rectangular footprint, not the actual support surface. Hollow shelves, irregular GLBs and grouped items need visual review; there is no persistent wall/table attachment or load validation.
-- **Prop artwork:** replace PNG/JPEG artwork (up to 2 MB) or choose Blank surface on placed library podiums, plinths, flyers and banners. Edits preserve transforms and affect only that instance, including when a model is duplicated. Arbitrary uploaded GLBs do not expose editable artwork surfaces. Library asset limits still apply.
+- **Prop artwork:** replace PNG/JPEG artwork (up to 2 MB) or choose Blank surface on placed library podiums, plinths, flyers and banners. Edits preserve transforms and affect only that instance, including when a model is duplicated. **Appearance:** set a colour tint and matte, satin, gloss or metallic finish for all surfaces or one material. Upload a PNG/JPEG texture to all surfaces or one material; texture files are stored with the project and require UV mapping. Some imported materials may have no UVs, and image placement follows the model's existing UV layout. These are visual concept changes, not production print templates.
 - **Saved views:** save up to 12 named camera positions, recall or remove them. Saved angles appear in the screenshot menu. They persist in project backups and review snapshots; the PDF uses its standard view set and orbit videos retain their standard path.
 - **Viewer quality:** Fast editing uses one pixel per display pixel and disables viewport shadows. Quality editing restores higher display resolution and shadows. PDF, screenshot and video exports use their own settings.
 
