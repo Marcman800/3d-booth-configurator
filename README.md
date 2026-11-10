@@ -4,6 +4,8 @@ An **AI-assisted side project** for designing exhibition booths in an interactiv
 
 Built iteratively with assistance from OpenAI Codex/ChatGPT for implementation, debugging, tests and documentation. AI assistance does not imply that the code or generated specifications have been independently audited. This is an experimental local MVP, not a production service or validated print-production tool.
 
+For a detailed file-by-file architecture, data model, API map and Claude Code onboarding guide, see [CLAUDE.md](CLAUDE.md).
+
 ## Features
 
 - Booth dimensions in millimetres, modular panels, individual panel widths and half-height walls.
@@ -120,7 +122,7 @@ No open-source licence has been selected yet. Package metadata is `UNLICENSED`; 
 
 ## Record a 360° tour
 
-Click **Video & screenshots**, choose HD (720p), Full HD (1080p) or 4K (2160p), select MP4 or WebM and choose 15 or 20 seconds. Keep the tab visible. Preview the video before downloading. Recording targets up to 30 fps; 4K needs more GPU power and can drop frames. MP4 is available only when the browser supports recording it; unsupported choices show a message instead of silently returning a different format. No audio, microphone, external encoder or server upload is used. Higher resolution is rendered directly from the 3D scene, not AI upscaling; it cannot recover detail missing from uploaded artwork.
+Click **Video & screenshots**, choose HD (720p), Full HD (1080p) or 4K (2160p), select MP4 or WebM and choose 15 or 20 seconds. The video camera starts facing the booth from the open front and completes a full orbit back to that same view. Adjust the starting angle, camera elevation and distance with the camera sliders before recording. Keep the tab visible. Preview the video before downloading. Recording targets up to 30 fps; 4K needs more GPU power and can drop frames. MP4 is available only when the browser supports recording it; unsupported choices show a message instead of silently returning a different format. No audio, microphone, external encoder or server upload is used. Higher resolution is rendered directly from the 3D scene, not AI upscaling; it cannot recover detail missing from uploaded artwork.
 
 The same dialog downloads PNG screenshots at the selected resolution, from the current view or front, back, left, right, top and perspective angles. Preset views frame the booth plus equipment; outer walls may occlude the interior.
 
@@ -141,7 +143,7 @@ The free library includes a white reception podium (front artwork supported), ti
 - Align checked objects to a common horizontal centre/depth or against a wall. Side-wall alignment requires that wall to be enabled. Alignment acts on checked items individually.
 - **Place active item on:** choose a support and place the active item at its bounding-box top. This checks the rectangular footprint, not the actual support surface. Hollow shelves, irregular GLBs and grouped items need visual review; there is no persistent wall/table attachment or load validation.
 - **Prop artwork:** replace PNG/JPEG artwork (up to 2 MB) or choose Blank surface on placed library podiums, plinths, flyers and banners. Edits preserve transforms and affect only that instance, including when a model is duplicated. **Appearance:** set a colour tint and matte, satin, gloss or metallic finish for all surfaces or one material. Upload a PNG/JPEG texture to all surfaces or one material; texture files are stored with the project and require UV mapping. Some imported materials may have no UVs, and image placement follows the model's existing UV layout. These are visual concept changes, not production print templates.
-- **Saved views:** save up to 12 named camera positions, recall or remove them. Saved angles appear in the screenshot menu. They persist in project backups and review snapshots; the PDF uses its standard view set and orbit videos retain their standard path.
+- **Saved views:** save up to 12 named camera positions, recall or remove them. Saved angles appear in the screenshot menu. They persist in project backups and review snapshots; the PDF uses its standard view set, while orbit videos use the camera angle, height and distance selected in the recorder.
 - **Viewer quality:** Fast editing uses one pixel per display pixel and disables viewport shadows. Quality editing restores higher display resolution and shadows. PDF, screenshot and video exports use their own settings.
 
 Position, rotation, naming, organisation and lighting changes reuse scene geometry. Geometry/artwork edits still rebuild the scene; this is an incremental performance improvement, not a complete renderer rewrite. Group/lock state and saved cameras are optional fields, so older project files remain compatible. The built-in table's specified height is corrected to 770 mm to match its visible tabletop.
