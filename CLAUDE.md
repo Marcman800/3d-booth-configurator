@@ -19,11 +19,11 @@ Useful commands:
 ```sh
 npm run dev       # Alias for the local server
 npm run local     # Alias for the local server
-npm run build     # Bundle app.mjs and its imports to dist/app.js
+npm run build     # Bundle app.mjs to dist/app.js plus lazy-loaded dist/chunks/
 npm test          # Run the unit/regression scripts
 ```
 
-`dist/app.js` is generated and ignored by Git. Run the build after changing JavaScript source and before opening a fresh checkout in the app. The tracked browser sources are `dist/index.html` and `dist/style.css`. When changing their referenced JavaScript/CSS cache versions, update the `?v=` values in `dist/index.html`.
+`dist/app.js` and `dist/chunks/` are generated and ignored by Git. The PDF library (jsPDF and its optional helpers) is loaded with a dynamic `import()` and lives in hashed chunk files, which the server serves from `/chunks/`. Run the build after changing JavaScript source and before opening a fresh checkout in the app. The tracked browser sources are `dist/index.html` and `dist/style.css`. When changing their referenced JavaScript/CSS cache versions, update the `?v=` values in `dist/index.html`.
 
 ## What the app currently does
 
@@ -74,7 +74,7 @@ flowchart TD
 | `server.mjs` | Loopback-only HTTP static server and JSON API for local projects, revisions, comments/decisions, and demo plan state. Persists the database to disk. |
 | `dist/index.html` | Maintained HTML interface shell: header, tabs/forms, editor dialogs and CSS/JS entry points. Dynamic collaboration and tour dialogs are created in JavaScript. |
 | `dist/style.css` | Maintained app styling, dialog styling and responsive layout. |
-| `dist/app.js` | Generated esbuild bundle; intentionally ignored and regenerated from `app.mjs`. Do not edit it by hand. |
+| `dist/app.js`, `dist/chunks/` | Generated esbuild bundle and code-split chunks; intentionally ignored and regenerated from `app.mjs`. Do not edit them by hand. |
 | `examples/sample-project.json` | Small importable project for trying the app without customer assets. |
 | `.github/workflows/ci.yml` | GitHub Actions workflow: Node 20, `npm ci`, `npm test`, then `npm run build` on pushes and pull requests. |
 | `README.md` | User-facing product features, quick start, print assumptions, limitations and workflows. |
@@ -96,6 +96,7 @@ flowchart TD
 | `saving-tests.mjs` | Named-project dirty/saved/error status. |
 | `tour-tests.mjs` | Recording format selection and orbit closure. |
 | `workflow-tests.mjs` | Grouping, object placement/alignment and review-state workflow. |
+| `image-tests.mjs` | Embedded image header/size checks on import, object ID and name validation. |
 
 ## Browser and server startup flow
 
@@ -148,9 +149,9 @@ These are provisional symmetric allowances and butt-joint assumptions. The outpu
 ## Persistence, sharing and review
 
 - **Browser recovery:** `editing.mjs` writes the current draft to IndexedDB database `forma-drafts`, object store `drafts`, key `current`. This is tied to the same browser profile and origin/port.
-- **Named local projects:** `collaboration.mjs` calls `server.mjs` after the user creates/saves a named project. The server stores projects and review data in `.local-data/reviews.json` by default. `FORMA_DATA` can point to another private directory. Save conflicts use `workspaceVersion`; a 409 conflict requires the user to preserve/download the current JSON rather than silently overwrite.
+- **Named local projects:** `collaboration.mjs` calls `server.mjs` after the user creates/saves a named project. The server stores projects and review data in `.local-data/reviews.json` by default. `FORMA_DATA` can point to another private directory. The server keeps up to three older copies (`reviews.json.1`–`.3`, rotated at most every 10 minutes by renaming). If a disk write fails, the in-memory state is reloaded from disk and the request fails, so the app never reports an unsaved change as saved. A missing main file falls back to `.1`; a damaged one stops startup rather than being replaced. Save conflicts use `workspaceVersion`; a 409 conflict requires the user to preserve/download the current JSON rather than silently overwrite.
 - **Project file:** the editor downloads/imports JSON. Embedded original artwork, GLB and textures can make it large. The app/server impose a 60 MB request/import ceiling.
-- **Visual share URL:** `share.mjs` uses gzip + URL-safe base64 in `#view=`. It strips contact/supplier notes, includes reduced artwork preview material, rejects GLB models, and limits the compressed payload to roughly 32 KB (decompressed content bounded to 2 MB). It is intended for visual preview, not full asset transfer.
+- **Visual share URL:** `share.mjs` uses gzip + URL-safe base64 in `#view=`. It strips contact/supplier notes, includes reduced artwork preview material, rejects GLB models, and limits the compressed payload to roughly 32 KB (decompressed content bounded to 2 MB). It is intended for visual preview, not full asset transfer. The **Copy preview link** button in the Review & export dialog creates these links.
 - **Review URL:** `#review=` points to a frozen revision stored in the local server. Each revision keeps its own snapshot and review events. Names are self-declared. Comments do not change review status; the latest approve/change request does. Revocation blocks later requests, but cannot recall content already downloaded or loaded.
 - **Demo plans:** `/api/plan` stores `free` or `studio` as local UI state only. There is no payment or server-enforced paid entitlement.
 
@@ -197,7 +198,7 @@ Browser capability and GPU memory vary. An image that fits file-size limits can 
 4. For scene/print calculations, retain mm as the data unit and convert only at the renderer boundary. Preserve the concept-vs-production disclaimers in `README.md` and generated PDF language.
 5. For upload changes, enforce limits before expensive decoding, validate imported JSON server-side, and do not put user assets or private `.local-data` into Git.
 6. Build with `npm run build`; run the relevant script or full `npm test` for code changes. Inspect changes with `git diff --check` and review the rendered workflow in a WebGL browser when UI/3D output changes.
-7. Do not hand-edit `dist/app.js`; it is a generated file. Update the `?v=` cache value in `dist/index.html` when changing the corresponding static JS/CSS entry point.
+7. Do not hand-edit `dist/app.js` or `dist/chunks/`; they are generated. Update the `?v=` cache value in `dist/index.html` when changing the corresponding static JS/CSS entry point.
 
 ## Repository and release notes
 

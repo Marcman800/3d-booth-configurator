@@ -15,13 +15,29 @@ function jpegSize(bytes){
  return null;
 }
 
+const HEADER_BYTES=1024*1024;
+function headerSize(header){
+ if(header.length>=24&&header[0]===0x89&&header[1]===0x50&&header[2]===0x4e&&header[3]===0x47&&header[12]===0x49&&header[13]===0x48&&header[14]===0x44&&header[15]===0x52){const view=new DataView(header.buffer,header.byteOffset,header.byteLength);return {width:view.getUint32(16,false),height:view.getUint32(20,false),type:'image/png'};}
+ const jpeg=jpegSize(header);return jpeg?{...jpeg,type:'image/jpeg'}:null;
+}
+
+// Checks an embedded data-URL image the same way an upload is checked: real header dimensions, format and byte size.
+export function checkImageData(data,{maxBytes,label='Image'}={}){
+ const match=typeof data==='string'&&/^data:(image\/(?:png|jpeg));base64,/.exec(data);if(!match)throw Error(`${label}: only embedded PNG or JPEG images are supported.`);
+ const encoded=data.slice(match[0].length);if(!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded))throw Error(`${label}: the image data is damaged.`);
+ const bytes=Math.floor(encoded.length*3/4)-(encoded.endsWith('==')?2:encoded.endsWith('=')?1:0);
+ if(bytes<1)throw Error(`${label}: the image is empty.`);if(maxBytes&&bytes>maxBytes)throw Error(`${label} must be ${Math.round(maxBytes/1048576)} MB or smaller.`);
+ const prefix=encoded.slice(0,Math.ceil(HEADER_BYTES/3)*4).replace(/=+$/,''),usable=prefix.slice(0,prefix.length-prefix.length%4);
+ const header=Uint8Array.from(atob(usable),c=>c.charCodeAt(0));const size=headerSize(header);
+ if(!size||size.type!==match[1])throw Error(`${label}: the image could not be read as ${match[1]==='image/png'?'PNG':'JPEG'}.`);
+ return {...checkImageDimensions(size.width,size.height,label),bytes};
+}
+
 export async function inspectImageFile(file,{maxBytes,label='Image'}={}){
  if(!file||!['image/png','image/jpeg'].includes(file.type))throw Error(`${label}: choose a PNG or JPEG image.`);
  if(!Number.isFinite(file.size)||file.size<1)throw Error(`${label}: the file is empty.`);
  if(maxBytes&&file.size>maxBytes)throw Error(`${label}: the file must be ${Math.round(maxBytes/1048576)} MB or smaller.`);
- const header=new Uint8Array(await file.slice(0,Math.min(file.size,1024*1024)).arrayBuffer());let size,type;
- if(header.length>=24&&header[0]===0x89&&header[1]===0x50&&header[2]===0x4e&&header[3]===0x47&&header[12]===0x49&&header[13]===0x48&&header[14]===0x44&&header[15]===0x52){const view=new DataView(header.buffer,header.byteOffset,header.byteLength);size={width:view.getUint32(16,false),height:view.getUint32(20,false)};type='image/png';}
- else{size=jpegSize(header);if(size)type='image/jpeg';}
+ const header=new Uint8Array(await file.slice(0,Math.min(file.size,HEADER_BYTES)).arrayBuffer());const size=headerSize(header),type=size?.type;
  if(!size||type!==file.type)throw Error(`${label}: the image file could not be read. Re-export it as a standard PNG or JPEG and try again.`);
  return checkImageDimensions(size.width,size.height,label);
 }

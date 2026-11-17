@@ -7,22 +7,51 @@ import {fileURLToPath} from 'node:url';
 import {validate} from './geometry.mjs';
 const root=fileURLToPath(new URL('.',import.meta.url));
 const dir=process.env.FORMA_DATA||root+'.local-data';await mkdir(dir,{recursive:true});
-let db;try{db=JSON.parse(await readFile(dir+'/reviews.json','utf8'));}catch(e){if(e.code!=='ENOENT')throw e;db={plan:'free',revisions:[]};}
-db.projects||=[];
+const DB=dir+'/reviews.json',BACKUPS=3,BACKUP_EVERY=10*60*1000;
+// Loads the database. A missing main file falls back to the newest backup (a crash between backup rotation and rename); a damaged main file stops startup instead of being replaced.
+async function load(){
+ for(const file of [DB,DB+'.1']){
+  let text;try{text=await readFile(file,'utf8');}catch(e){if(e.code==='ENOENT')continue;throw e;}
+  let data;try{data=JSON.parse(text);}catch{throw Error(`${file} is damaged. Restore it from ${DB}.1, .2 or .3 before starting the server.`);}
+  if(file!==DB)console.warn(`Loaded backup ${file} because ${DB} was missing.`);
+  data.projects||=[];data.revisions||=[];storageBytes=Buffer.byteLength(text);return data;
+ }
+ storageBytes=0;return {plan:'free',revisions:[],projects:[]};
+}
+let storageBytes=0,lastBackup=0;let db=await load();
 const digest=p=>createHash('sha256').update(JSON.stringify(reviewContent(p))).digest('hex');
 const projectSummary=p=>{const latest=db.revisions.filter(r=>r.projectId===p.id).at(-1);return {id:p.id,title:p.project.projectName,updated:p.updated,version:p.version,archived:!!p.archived,status:latest&&latest.digest===digest(p.project)?reviewStatus(latest):'Draft',revision:latest?.revision};};
-const persist=async()=>{await writeFile(dir+'/reviews.tmp',JSON.stringify(db));await rename(dir+'/reviews.tmp',dir+'/reviews.json');};
+const ignoreMissing=e=>{if(e.code!=='ENOENT')throw e;};
+async function rotateBackups(){for(let i=BACKUPS-1;i>=1;i--)await rename(`${DB}.${i}`,`${DB}.${i+1}`).catch(ignoreMissing);await rename(DB,DB+'.1').catch(ignoreMissing);}
+// Writes the in-memory database. On failure the in-memory state is reloaded from disk, so the app never reports changes that were not saved.
+async function persist(){
+ const text=JSON.stringify(db);
+ try{await writeFile(dir+'/reviews.tmp',text);if(Date.now()-lastBackup>BACKUP_EVERY){await rotateBackups();lastBackup=Date.now();}await rename(dir+'/reviews.tmp',DB);storageBytes=Buffer.byteLength(text);}
+ catch(e){try{db=await load();}catch(reloadError){console.error(reloadError.message);}throw Error(`Could not save to disk (${e.code||e.message}). Your last saved version was kept.`);}
+}
 const token=()=>randomBytes(24).toString('hex');
 const MAX_BODY=60*1024*1024;
 const summary=r=>({id:r.id,title:r.title,revision:r.revision,created:r.created,digest:r.digest,revoked:r.revoked,token:r.token,events:r.events,projectId:r.projectId||null,status:reviewStatus(r)});
+const SECURITY_HEADERS={'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",'X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Cross-Origin-Opener-Policy':'same-origin','Cross-Origin-Resource-Policy':'same-origin'};
+const STATIC={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css'};
+const TYPES={html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8'};
 let queue=Promise.resolve();
-const server=http.createServer((req,res)=>{queue=queue.then(async()=>{
- const send=(code,value)=>{res.writeHead(code,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value));};
- try{const url=new URL(req.url,'http://localhost');const path=url.pathname;
+// Static files and request bodies are handled outside the queue, so a slow upload does not hold up other requests. Only database work is serialised.
+const server=http.createServer(async(req,res)=>{
+ for(const [k,v] of Object.entries(SECURITY_HEADERS))res.setHeader(k,v);
+ const send=(code,value)=>{if(res.headersSent)return res.destroy();res.writeHead(code,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value));};
+ let path,body={};
+ try{path=new URL(req.url,'http://localhost').pathname;
  if(!['localhost','127.0.0.1'].includes((req.headers.host||'').split(':')[0]))return send(403,{error:'Local access only'});
  if(req.method==='POST'&&req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`)return send(403,{error:'Origin rejected'});
- let body={};if(req.method==='POST'){if(!req.headers['content-type']?.startsWith('application/json'))return send(415,{error:'JSON required'});const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>MAX_BODY){res.setHeader('Connection','close');return send(413,{error:'Project exceeds 60 MB'});}chunks.push(chunk);}const data=Buffer.concat(chunks,size).toString('utf8');body=JSON.parse(data||'{}');}
- if(path==='/api/workspace'&&req.method==='GET')return send(200,{plan:db.plan,revisions:db.revisions.map(summary),projects:db.projects.map(projectSummary)});
+ if(!path.startsWith('/api/')){if(req.method!=='GET')return send(405,{error:'Method not allowed'});const file=STATIC[path]||(/^\/chunks\/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*\.js$/.test(path)?path.slice(1):null);if(!file)return send(404,{error:'Not found'});const data=await readFile(root+'dist/'+file);res.writeHead(200,{'Content-Type':TYPES[file.split('.').pop()],'Cache-Control':'no-cache'});return res.end(data);}
+ if(req.method==='POST'){if(!req.headers['content-type']?.startsWith('application/json'))return send(415,{error:'JSON required'});const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>MAX_BODY){res.setHeader('Connection','close');return send(413,{error:'Project exceeds 60 MB'});}chunks.push(chunk);}body=JSON.parse(Buffer.concat(chunks,size).toString('utf8')||'{}');}
+ }catch(e){return send(400,{error:e.message});}
+ const run=()=>handle(req,path,body,send).catch(e=>send(400,{error:e.message}));
+ queue=queue.then(run,run);
+});
+async function handle(req,path,body,send){
+ if(path==='/api/workspace'&&req.method==='GET')return send(200,{plan:db.plan,storageBytes,revisions:db.revisions.map(summary),projects:db.projects.map(projectSummary)});
  if(path==='/api/projects'&&req.method==='POST'){
  const project=validate(body.project);let p=db.projects.find(p=>p.id===project.workspaceId);
  if(project.workspaceId&&!p)throw Error('Project no longer exists. Import it as a new project.');
@@ -55,10 +84,6 @@ const server=http.createServer((req,res)=>{queue=queue.then(async()=>{
  if(kind==='approve'&&body.confirm!==true)throw Error('Confirm concept approval first.');
  r.events.push({id:token(),kind,name,message,created:new Date().toISOString(),revision:r.revision,digest:r.digest});await persist();return send(201,{events:r.events,projectId:r.projectId||null,status:reviewStatus(r)});
  }}
- if(path.startsWith('/api/'))return send(404,{error:'Not found'});
- if(req.method!=='GET')return send(405,{error:'Method not allowed'});
- const allowed={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css'};const file=allowed[path];if(!file)return send(404,{error:'Not found'});
- res.writeHead(200,{'Content-Type':file.endsWith('.html')?'text/html':file.endsWith('.css')?'text/css':'text/javascript','Cache-Control':'no-cache'});res.end(await readFile(root+'dist/'+file));
- }catch(e){send(400,{error:e.message});}
- }).catch(e=>{res.destroy();console.error(e.message);});});
+ return send(404,{error:'Not found'});
+}
 server.listen(Number(process.env.PORT||4174),'127.0.0.1',()=>console.log(`Forma local workspace: http://localhost:${server.address().port}`));

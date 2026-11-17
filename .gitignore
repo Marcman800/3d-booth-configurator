@@ -1,6 +1,7 @@
 # Dependencies and generated bundle
 node_modules/
 dist/app.js
+dist/chunks/
 coverage/
 *.log
 

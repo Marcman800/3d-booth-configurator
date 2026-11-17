@@ -53,7 +53,7 @@ Import `examples/sample-project.json` using **Import backup** for a clean exampl
 
 ## Local storage and sharing
 
-The Node server binds to `127.0.0.1`. It stores named projects, revisions, review events and demo plan selection in `.local-data/reviews.json`. Edits to a named project auto-save there after about 1.5 seconds of inactivity while the local server is running. This does not sync to another device or a cloud service. Back up that directory privately. `FORMA_DATA` can point to another private data directory.
+The Node server binds to `127.0.0.1`. It stores named projects, revisions, review events and demo plan selection in `.local-data/reviews.json`. Edits to a named project auto-save there after about 1.5 seconds of inactivity while the local server is running. This does not sync to another device or a cloud service. The server also keeps up to three older copies of the database (`reviews.json.1` to `.3`) in the same folder, and the projects dialog shows how much disk the saved projects use. Back up that directory privately. `FORMA_DATA` can point to another private data directory.
 
 Browser IndexedDB separately keeps the current recovery draft, including before a named project exists. The save status identifies browser recovery and named-project saves; failed saves remain visible, and version conflicts are surfaced instead of silently replacing another window's changes. Download JSON backups for portable copies; they may contain original artwork and models.
 
@@ -102,7 +102,7 @@ Large projects can exhaust browser or disk storage. The local server is a protot
 | `server.mjs` | Loopback-only local persistence and review API |
 | `branding.mjs`, `share.mjs` | Proposal settings and legacy snapshot compatibility |
 | `dist/index.html`, `dist/style.css` | Maintained UI source |
-| `dist/app.js` | Generated JavaScript bundle; excluded from Git |
+| `dist/app.js`, `dist/chunks/` | Generated JavaScript bundle and lazy-loaded chunks; excluded from Git |
 
 Dependencies: Three.js, jsPDF and esbuild. Google Fonts is optional; system fonts are the fallback. Tests cover geometry, imports, sharing, history, branding, project persistence, review states, conflict detection, dragging and save status. GitHub Actions runs the test suite and build; browser/visual QA remains manual.
 
