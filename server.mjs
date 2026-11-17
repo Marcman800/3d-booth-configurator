@@ -13,6 +13,7 @@ const digest=p=>createHash('sha256').update(JSON.stringify(reviewContent(p))).di
 const projectSummary=p=>{const latest=db.revisions.filter(r=>r.projectId===p.id).at(-1);return {id:p.id,title:p.project.projectName,updated:p.updated,version:p.version,archived:!!p.archived,status:latest&&latest.digest===digest(p.project)?reviewStatus(latest):'Draft',revision:latest?.revision};};
 const persist=async()=>{await writeFile(dir+'/reviews.tmp',JSON.stringify(db));await rename(dir+'/reviews.tmp',dir+'/reviews.json');};
 const token=()=>randomBytes(24).toString('hex');
+const MAX_BODY=60*1024*1024;
 const summary=r=>({id:r.id,title:r.title,revision:r.revision,created:r.created,digest:r.digest,revoked:r.revoked,token:r.token,events:r.events,projectId:r.projectId||null,status:reviewStatus(r)});
 let queue=Promise.resolve();
 const server=http.createServer((req,res)=>{queue=queue.then(async()=>{
@@ -20,7 +21,7 @@ const server=http.createServer((req,res)=>{queue=queue.then(async()=>{
  try{const url=new URL(req.url,'http://localhost');const path=url.pathname;
  if(!['localhost','127.0.0.1'].includes((req.headers.host||'').split(':')[0]))return send(403,{error:'Local access only'});
  if(req.method==='POST'&&req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`)return send(403,{error:'Origin rejected'});
- let body={};if(req.method==='POST'){if(!req.headers['content-type']?.startsWith('application/json'))return send(415,{error:'JSON required'});let data='';for await(const chunk of req){data+=chunk;if(Buffer.byteLength(data)>60*1024*1024)return send(413,{error:'Project exceeds 60 MB'});}body=JSON.parse(data||'{}');}
+ let body={};if(req.method==='POST'){if(!req.headers['content-type']?.startsWith('application/json'))return send(415,{error:'JSON required'});const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>MAX_BODY){res.setHeader('Connection','close');return send(413,{error:'Project exceeds 60 MB'});}chunks.push(chunk);}const data=Buffer.concat(chunks,size).toString('utf8');body=JSON.parse(data||'{}');}
  if(path==='/api/workspace'&&req.method==='GET')return send(200,{plan:db.plan,revisions:db.revisions.map(summary),projects:db.projects.map(projectSummary)});
  if(path==='/api/projects'&&req.method==='POST'){
  const project=validate(body.project);let p=db.projects.find(p=>p.id===project.workspaceId);
@@ -41,11 +42,13 @@ const server=http.createServer((req,res)=>{queue=queue.then(async()=>{
  const r={id:token(),token:token(),title:project.projectName,projectId,revision:db.revisions.filter(r=>(r.projectId||null)===projectId).length+1,created:new Date().toISOString(),project,events:[],revoked:false};
  r.digest=digest(project);db.revisions.push(r);await persist();return send(201,summary(r));
  }
- const match=path.match(/^\/api\/review\/([a-f0-9]{48})(?:\/(events|revoke))?$/);
+ // Revoke by revision ID (owner workspace listing), not by the review token that reviewers hold in their link.
+ const rv=path.match(/^\/api\/revisions\/([a-f0-9]{48})\/revoke$/);
+ if(rv&&req.method==='POST'){const r=db.revisions.find(r=>r.id===rv[1]);if(!r)return send(404,{error:'Revision not found'});r.revoked=true;await persist();return send(200,{ok:true});}
+ const match=path.match(/^\/api\/review\/([a-f0-9]{48})(?:\/(events))?$/);
  if(match){const r=db.revisions.find(r=>r.token===match[1]);if(!r)return send(404,{error:'Review not found'});
- if(match[2]==='revoke'&&req.method==='POST'){r.revoked=true;await persist();return send(200,{ok:true});}
  if(r.revoked)return send(410,{error:'This review link has been disabled.'});
- if(req.method==='GET'&&!match[2])return send(200,{...summary(r),project:r.project});
+ if(req.method==='GET'&&!match[2]){const {id,...reviewer}=summary(r);return send(200,{...reviewer,project:r.project});}
  if(req.method==='POST'&&match[2]==='events'){
  const name=String(body.name||'').trim(),message=String(body.message||'').trim(),kind=body.kind;
  if(!name||name.length>100||!message||message.length>3000||!['comment','changes','approve'].includes(kind))throw Error('Enter your name and feedback (up to 3,000 characters).');

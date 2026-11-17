@@ -172,7 +172,7 @@ The client helper `api()` in `collaboration.mjs` prefixes paths with `/api/` and
 | `/api/revisions` | POST | Create a frozen snapshot after validation. |
 | `/api/review/:token` | GET | Load a non-revoked review revision. |
 | `/api/review/:token/events` | POST | Add `comment`, `changes`, or confirmed `approve` event. |
-| `/api/review/:token/revoke` | POST | Revoke a review token. |
+| `/api/revisions/:id/revoke` | POST | Disable a revision's review link. Uses the revision ID from the workspace listing, not the reviewer's token. Defence-in-depth only: anyone with loopback access can still read `/api/workspace`. |
 
 Requests are serialized through an in-process promise queue. The JSON database is written to a temporary file then renamed. This is appropriate for a local prototype, not a multi-process or cloud database.
 

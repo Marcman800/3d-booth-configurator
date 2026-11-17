@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import {SaveState} from './saving.mjs';
+import {SaveState,isPristineDraft} from './saving.mjs';
+import {defaults} from './geometry.mjs';
 const status=new SaveState(),p={projectName:'Concept',workspaceId:'one',workspaceVersion:1,width:4000};
 assert.equal(status.text({projectName:'New'}),'Not saved to My projects');
 status.saved(p);assert.match(status.text(p),/^Saved/);
@@ -8,4 +9,6 @@ assert.match(status.text({...p,workspaceVersion:2}),/^Saved/);
 status.busy=true;assert.match(status.text(p),/^Saving/);status.busy=false;
 status.error='Disk unavailable';assert.match(status.text(p),/^Save failed/);
 status.saved(p);assert.match(status.text({...p,width:5000}),/^Unsaved/);
-assert.match(status.text(p),/^Saved/);console.log('Named-project save status, metadata independence, edits during save and failure states passed.');
+assert.match(status.text(p),/^Saved/);
+const fresh=defaults(),reordered=Object.fromEntries(Object.entries(defaults()).reverse());assert.equal(isPristineDraft(reordered,fresh),true);assert.equal(isPristineDraft({...defaults(),width:5000},fresh),false);assert.equal(isPristineDraft({...defaults(),workspaceId:'one'},fresh),false);
+console.log('Named-project save status, metadata independence, edits during save, failure states and untouched-draft detection passed.');
