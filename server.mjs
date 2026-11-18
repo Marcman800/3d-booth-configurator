@@ -33,8 +33,9 @@ const token=()=>randomBytes(24).toString('hex');
 const MAX_BODY=60*1024*1024;
 const summary=r=>({id:r.id,title:r.title,revision:r.revision,created:r.created,digest:r.digest,revoked:r.revoked,token:r.token,events:r.events,projectId:r.projectId||null,status:reviewStatus(r)});
 const SECURITY_HEADERS={'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",'X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Cross-Origin-Opener-Policy':'same-origin','Cross-Origin-Resource-Policy':'same-origin'};
-const STATIC={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/style.css':'style.css'};
-const TYPES={html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8'};
+// Paths relative to the repository root. Only these files and hashed build chunks are served.
+const STATIC={'/':'dist/index.html','/index.html':'dist/index.html','/app.js':'dist/app.js','/style.css':'dist/style.css','/examples/sample-project.json':'examples/sample-project.json'};
+const TYPES={html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8',json:'application/json; charset=utf-8'};
 let queue=Promise.resolve();
 // Static files and request bodies are handled outside the queue, so a slow upload does not hold up other requests. Only database work is serialised.
 const server=http.createServer(async(req,res)=>{
@@ -44,7 +45,7 @@ const server=http.createServer(async(req,res)=>{
  try{path=new URL(req.url,'http://localhost').pathname;
  if(!['localhost','127.0.0.1'].includes((req.headers.host||'').split(':')[0]))return send(403,{error:'Local access only'});
  if(req.method==='POST'&&req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`)return send(403,{error:'Origin rejected'});
- if(!path.startsWith('/api/')){if(req.method!=='GET')return send(405,{error:'Method not allowed'});const file=STATIC[path]||(/^\/chunks\/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*\.js$/.test(path)?path.slice(1):null);if(!file)return send(404,{error:'Not found'});const data=await readFile(root+'dist/'+file);res.writeHead(200,{'Content-Type':TYPES[file.split('.').pop()],'Cache-Control':'no-cache'});return res.end(data);}
+ if(!path.startsWith('/api/')){if(req.method!=='GET')return send(405,{error:'Method not allowed'});const file=STATIC[path]||(/^\/chunks\/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*\.js$/.test(path)?'dist'+path:null);if(!file)return send(404,{error:'Not found'});const data=await readFile(root+file);res.writeHead(200,{'Content-Type':TYPES[file.split('.').pop()],'Cache-Control':'no-cache'});return res.end(data);}
  if(req.method==='POST'){if(!req.headers['content-type']?.startsWith('application/json'))return send(415,{error:'JSON required'});const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>MAX_BODY){res.setHeader('Connection','close');return send(413,{error:'Project exceeds 60 MB'});}chunks.push(chunk);}body=JSON.parse(Buffer.concat(chunks,size).toString('utf8')||'{}');}
  }catch(e){return send(400,{error:e.message});}
  const run=()=>handle(req,path,body,send).catch(e=>send(400,{error:e.message}));

@@ -60,8 +60,9 @@ flowchart TD
 | `appearance.mjs` | Applies colour, finish and texture settings to generated and imported Three.js materials; builds the object appearance editor. |
 | `imageAssets.mjs` | Inspects PNG/JPEG dimensions and size before browser decoding; shared image dimension limits and format checks. |
 | `dragging.mjs` | Pointer-driven object movement, selection, group movement, snapping, panel/object hit handling and walk-mode interaction guards. |
-| `workflow.mjs` | Object group membership, group movement, footprint calculations, alignment, support placement, saved camera views and floating editor workflows. |
-| `inspector.mjs` | Selection editor panel for the selected wall panel or object. |
+| `workflow.mjs` | Object group membership, group movement, footprint calculations, alignment, support placement, saved camera views and the Furnish tab's collapsible **Arrange items** tools. |
+| `inspector.mjs` | Selection editor for the selected wall panel or object. It moves the live controls into a panel docked on the right (a bottom sheet on phones) and back again. |
+| `layout.mjs` | Page chrome: Project and Share & export header menus, the scene toolbar, the editable project title, dialog tabs, drag-and-drop on `.upload` zones and the docked-editor layout class. Modules still create their own buttons; this module moves them into place and forwards menu clicks to them. |
 | `editing.mjs` | Undo/redo history and IndexedDB browser recovery draft store. |
 | `saving.mjs` | Named-project save-state comparison and user-visible save-status strings. |
 | `collaboration.mjs` | Browser client for `/api/*`, project/library/review dialogs, frozen review experience, review links, review events, and demo plan selector. It does not call an external collaboration service. |
@@ -72,12 +73,13 @@ flowchart TD
 | `environment.mjs` | Decorative exhibition hall geometry. Other environment choices are mainly colour/backdrop treatments. |
 | `tour.mjs` | Video format support selection, closed camera orbit position calculation, video recording dialog, video and screenshot capture. |
 | `server.mjs` | Loopback-only HTTP static server and JSON API for local projects, revisions, comments/decisions, and demo plan state. Persists the database to disk. |
-| `dist/index.html` | Maintained HTML interface shell: header, tabs/forms, editor dialogs and CSS/JS entry points. Dynamic collaboration and tour dialogs are created in JavaScript. |
+| `dist/index.html` | Maintained HTML interface shell: header, step tabs with collapsible groups, the Concept package dialog (Export / Project details / Print allowances tabs), the first-run welcome dialog and CSS/JS entry points. Buttons the menus forward to live in the hidden `#actionStash`. Dynamic collaboration and tour dialogs are created in JavaScript. |
 | `dist/style.css` | Maintained app styling, dialog styling and responsive layout. |
 | `dist/app.js`, `dist/chunks/` | Generated esbuild bundle and code-split chunks; intentionally ignored and regenerated from `app.mjs`. Do not edit them by hand. |
 | `examples/sample-project.json` | Small importable project for trying the app without customer assets. |
 | `.github/workflows/ci.yml` | GitHub Actions workflow: Node 20, `npm ci`, `npm test`, then `npm run build` on pushes and pull requests. |
 | `README.md` | User-facing product features, quick start, print assumptions, limitations and workflows. |
+| `CHANGELOG.md` | Dated summary of user-visible and developer-relevant changes. Add an entry with each change set. |
 | `CONTRIBUTING.md`, `SECURITY.md` | Change workflow and local-only security guidance. |
 
 ### Tests
@@ -100,7 +102,7 @@ flowchart TD
 
 ## Browser and server startup flow
 
-1. `npm start` runs `server.mjs`, which serves only the whitelisted app files from `dist/` and exposes the local `/api/*` routes.
+1. `npm start` runs `server.mjs`, which serves only the whitelisted app files from `dist/` (plus `examples/sample-project.json` for the welcome screen's sample) and exposes the local `/api/*` routes.
 2. `dist/index.html` loads `dist/style.css` and the built `dist/app.js` bundle.
 3. `app.mjs` constructs the initial project using `defaults()` from `geometry.mjs`, creates a Three.js scene, renderer, lights and OrbitControls, then initializes UI and feature modules.
 4. `initializeProject()` checks the URL. `#view=` opens a compressed read-only preview snapshot; `#review=` loads a saved frozen review from the local API; otherwise it restores the IndexedDB draft and optional named project.
@@ -198,7 +200,8 @@ Browser capability and GPU memory vary. An image that fits file-size limits can 
 4. For scene/print calculations, retain mm as the data unit and convert only at the renderer boundary. Preserve the concept-vs-production disclaimers in `README.md` and generated PDF language.
 5. For upload changes, enforce limits before expensive decoding, validate imported JSON server-side, and do not put user assets or private `.local-data` into Git.
 6. Build with `npm run build`; run the relevant script or full `npm test` for code changes. Inspect changes with `git diff --check` and review the rendered workflow in a WebGL browser when UI/3D output changes.
-7. Do not hand-edit `dist/app.js` or `dist/chunks/`; they are generated. Update the `?v=` cache value in `dist/index.html` when changing the corresponding static JS/CSS entry point.
+7. Add a short entry to `CHANGELOG.md` and update `README.md`/this file when behaviour, UI or project structure changes.
+8. Do not hand-edit `dist/app.js` or `dist/chunks/`; they are generated. Update the `?v=` cache value in `dist/index.html` when changing the corresponding static JS/CSS entry point.
 
 ## Repository and release notes
 

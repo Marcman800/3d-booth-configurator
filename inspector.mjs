@@ -1,5 +1,5 @@
 // Move live controls rather than cloning them: uploads, history and validation keep one source of truth.
-export function installInspector({isReadOnly,getPanel,getObject}){
+export function installInspector({isReadOnly,getPanel,getObject,panelName=id=>'Wall panel · '+id,itemName=o=>o?.name||o?.id}){
  const panel=document.createElement('section');panel.className='floatingEditor';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Selection editor');panel.innerHTML='<div class="floatingEditorHead"><strong data-title>Selection editor</strong><button data-fold aria-label="Collapse selection editor">−</button><button data-close aria-label="Close selection editor">×</button></div><div class="floatingEditorBody"></div>';
  document.body.append(panel);const body=panel.querySelector('.floatingEditorBody'),head=panel.querySelector('.floatingEditorHead');let kind=null,moved=[],drag=null;
  const button=document.createElement('button');button.textContent='Selection editor';document.querySelector('header').append(button);
@@ -7,18 +7,19 @@ export function installInspector({isReadOnly,getPanel,getObject}){
  function restore(){document.querySelectorAll('[data-editor-notice]').forEach(n=>n.remove());for(const {node,marker} of moved){marker.replaceWith(node);}moved=[];body.replaceChildren();}
  function move(node){if(!node||moved.some(p=>p.node===node))return;const marker=document.createComment('selection editor home');node.replaceWith(marker);moved.push({node,marker});body.append(node);}
  function heading(text){const h=document.createElement('h2');h.textContent=text;body.append(h);}
- function sync(){const o=getObject();panel.querySelector('[data-title]').textContent=kind==='wall'?'Wall panel · '+getPanel():'Item · '+(o?.name||o?.id||'Add a model');button.hidden=isReadOnly();if(isReadOnly())close();}
+ function sync(){const o=getObject();panel.querySelector('[data-title]').textContent=kind==='wall'?panelName(getPanel()):(o?itemName(o):'No item selected');button.hidden=isReadOnly();if(isReadOnly())close();}
  function open(next=kind||'wall'){
  if(isReadOnly())return;if(next===kind&&!panel.hidden){sync();return;}restore();kind=next;panel.hidden=false;body.hidden=false;panel.querySelector('[data-fold]').textContent='−';panel.querySelector('[data-fold]').setAttribute('aria-label','Collapse selection editor');
  if(kind==='wall'){
  heading('Size & panel layout');for(const id of ['wallPanel','panelWidth','panelHeight'])move($(id).closest('label'));
  move($('halfPanel').parentElement);move($('splitPanel').parentElement);
- heading('Artwork & colour');for(const node of [...$('art').children])if(node.tagName!=='H2'&&!node.contains($('panelSelect')))move(node);move($('wallLayoutNote'));
+ heading('Artwork & colour');for(const node of [...$('art').children])if(node.tagName!=='H2'&&!node.hasAttribute('data-keep')&&!node.contains($('panelSelect')))move(node);move($('wallLayoutNote'));
  }else{
  // Preserve all existing item tools, including library uploads and generated-prop artwork.
- move($('objectSelect').closest('label'));move($('objectFields'));move(document.querySelector('[data-art]'));for(const node of [...$('objects').children])move(node);
+ // Item tools only: the library and uploads stay in the Furnish tab so more items can be added while one is edited.
+ move($('objectSelect').closest('label'));move($('objectFields'));move(document.querySelector('[data-art]'));
  }
- const notice=document.createElement('p');notice.dataset.editorNotice='true';notice.className='info';notice.textContent='Editing controls are in the floating selection editor. Close it to return them here.';$(kind==='wall'?'art':'objects').append(notice);sync();body.scrollTop=0;
+ const notice=document.createElement('p');notice.dataset.editorNotice='true';notice.className='info';notice.textContent=kind==='wall'?'Editing this panel in the panel on the right.':'Editing the selected item in the panel on the right.';$(kind==='wall'?'art':'objects').append(notice);sync();body.scrollTop=0;
  }
  function close(){restore();panel.hidden=true;}
  button.onclick=()=>panel.hidden?open():close();panel.querySelector('[data-close]').onclick=close;

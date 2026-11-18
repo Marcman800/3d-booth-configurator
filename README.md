@@ -18,6 +18,9 @@ For a detailed file-by-file architecture, data model, API map and Claude Code on
 - Local named projects with automatic saving after edits pause, duplication, archiving, backup import/export and browser recovery drafts.
 - Frozen review revisions with feedback, change requests, concept approvals and revocable local links.
 - A clearly labelled Free/Studio plan demo. No payments or real subscriptions.
+- A focused interface: a compact header with **Project** and **Share & export** menus, a toolbar on the 3D view, a side panel for the selected panel or item, a to-scale wall strip for artwork, a searchable library in the Furnish tab, a first-run welcome screen and a phone layout.
+
+See [CHANGELOG.md](CHANGELOG.md) for recent changes.
 
 ## Quick start
 
@@ -43,13 +46,13 @@ npm run build
 ## Try a design
 
 1. Choose booth dimensions and panels under **Space**.
-2. Add wall artwork and equipment, or use **My projects & library → Library**.
-3. Click and drag objects; use **Furnish** for dimensions, height and rotation. Drag empty space to orbit. Escape cancels a move.
-4. Click **Save project** once to create a named project. Later edits auto-save to My projects after about 1.5 seconds without changes; the browser recovery draft also continues saving.
-5. Use **Brand & present** to customise and export a concept PDF.
-6. Use **Share design → Save & create review link** to freeze a version for local review.
+2. Add wall artwork under **Artwork** (pick a panel in the wall strip or click one in 3D), and furniture from the library under **Furnish**.
+3. Click and drag objects in the 3D view; the selected item or panel opens in the panel on the right. Drag empty space to orbit. Escape cancels a move.
+4. Choose **Project → Save project** once to create a named project. Click the project name in the header to rename it. Later edits auto-save to My projects after about 1.5 seconds without changes; the browser recovery draft also continues saving.
+5. Use **Share & export → Branded proposal…** or **Concept PDF & package…** to export PDFs.
+6. Use **Share & export → Share for review…** to freeze a version for local review.
 
-Import `examples/sample-project.json` using **Import backup** for a clean example without customer assets. A new imported backup is treated as an independent draft.
+On first launch, choose **Try the sample** to open `examples/sample-project.json`, or import it later with **Project → Import backup…**, for a clean example without customer assets. A new imported backup is treated as an independent draft.
 
 ## Local storage and sharing
 
@@ -98,9 +101,10 @@ Large projects can exhaust browser or disk storage. The local server is a protot
 | `models.mjs`, `library.mjs`, `appearance.mjs`, `imageAssets.mjs` | GLB validation/loading, generated models, surface appearance controls and fast image size checks |
 | `dragging.mjs`, `environment.mjs` | Scene interaction and decorative venue |
 | `editing.mjs`, `saving.mjs` | Undo history, browser recovery, named-project auto-save state and save status |
-| `collaboration.mjs`, `workspace.mjs` | Project/review UI and review status |
+| `collaboration.mjs`, `workspace.mjs` | Project/review UI, Furnish-tab library browser and review status |
+| `layout.mjs`, `inspector.mjs` | Header menus, scene toolbar, dialog tabs, drag-and-drop uploads, and the docked selection panel |
 | `server.mjs` | Loopback-only local persistence and review API |
-| `branding.mjs`, `share.mjs` | Proposal settings and legacy snapshot compatibility |
+| `branding.mjs`, `share.mjs` | Proposal settings and view-only preview links (`#view=`) |
 | `dist/index.html`, `dist/style.css` | Maintained UI source |
 | `dist/app.js`, `dist/chunks/` | Generated JavaScript bundle and lazy-loaded chunks; excluded from Git |
 
@@ -109,7 +113,7 @@ Dependencies: Three.js, jsPDF and esbuild. Google Fonts is optional; system font
 ## Roadmap
 
 - Top-down editing and tabletop placement.
-- More accessible and responsive controls, clearer placement warnings.
+- Further accessibility review (keyboard flow, screen-reader labels, contrast) and clearer placement warnings.
 - Review-specific approval information in exported PDFs.
 - Broader browser and complete customer-journey testing.
 - Optional authenticated hosting/cloud storage, only after local validation.
@@ -122,7 +126,7 @@ No open-source licence has been selected yet. Package metadata is `UNLICENSED`; 
 
 ## Record a 360° tour
 
-Click **Video & screenshots**, choose HD (720p), Full HD (1080p) or 4K (2160p), select MP4 or WebM and choose 15 or 20 seconds. The video camera starts facing the booth from the open front and completes a full orbit back to that same view. Adjust the starting angle, camera elevation and distance with the camera sliders before recording. Keep the tab visible. Preview the video before downloading. Recording targets up to 30 fps; 4K needs more GPU power and can drop frames. MP4 is available only when the browser supports recording it; unsupported choices show a message instead of silently returning a different format. No audio, microphone, external encoder or server upload is used. Higher resolution is rendered directly from the 3D scene, not AI upscaling; it cannot recover detail missing from uploaded artwork.
+Click **Capture** in the scene toolbar (or **Share & export → Video & screenshots…**), choose HD (720p), Full HD (1080p) or 4K (2160p), select MP4 or WebM and choose 15 or 20 seconds. The video camera starts facing the booth from the open front and completes a full orbit back to that same view. Adjust the starting angle, camera elevation and distance with the camera sliders; a small preview shows the opening frame. Keep the tab visible. Preview the video before downloading. Recording targets up to 30 fps; 4K needs more GPU power and can drop frames. MP4 is available only when the browser supports recording it; unsupported choices show a message instead of silently returning a different format. No audio, microphone, external encoder or server upload is used. Higher resolution is rendered directly from the 3D scene, not AI upscaling; it cannot recover detail missing from uploaded artwork.
 
 The same dialog downloads PNG screenshots at the selected resolution, from the current view or front, back, left, right, top and perspective angles. Preset views frame the booth plus equipment; outer walls may occlude the interior.
 
@@ -139,7 +143,7 @@ The free library includes a white reception podium (front artwork supported), ti
 
 ## Editing workflow
 
-- **Furnish → Objects & layout:** click a name to select it; check multiple rows to group, ungroup, lock, unlock or align them. Groups translate together while dragging and when editing X/Z/base elevation. Rotation and scaling remain per item. Locking any member prevents moving the group. Duplicates start unlocked and ungrouped.
+- **Furnish → Arrange items:** click a name to select it; check multiple rows to group, ungroup, lock, unlock or align them. Groups translate together while dragging and when editing X/Z/base elevation. Rotation and scaling remain per item. Locking any member prevents moving the group. Duplicates start unlocked and ungrouped.
 - Align checked objects to a common horizontal centre/depth or against a wall. Side-wall alignment requires that wall to be enabled. Alignment acts on checked items individually.
 - **Place active item on:** choose a support and place the active item at its bounding-box top. This checks the rectangular footprint, not the actual support surface. Hollow shelves, irregular GLBs and grouped items need visual review; there is no persistent wall/table attachment or load validation.
 - **Prop artwork:** replace PNG/JPEG artwork (up to 2 MB) or choose Blank surface on placed library podiums, plinths, flyers and banners. Edits preserve transforms and affect only that instance, including when a model is duplicated. **Appearance:** set a colour tint and matte, satin, gloss or metallic finish for all surfaces or one material. Upload a PNG/JPEG texture to all surfaces or one material; texture files are stored with the project and require UV mapping. Some imported materials may have no UVs, and image placement follows the model's existing UV layout. These are visual concept changes, not production print templates.
@@ -148,6 +152,6 @@ The free library includes a white reception podium (front artwork supported), ti
 
 Position, rotation, naming, organisation and lighting changes reuse scene geometry. Geometry/artwork edits still rebuild the scene; this is an incremental performance improvement, not a complete renderer rewrite. Group/lock state and saved cameras are optional fields, so older project files remain compatible. The built-in table's specified height is corrected to 770 mm to match its visible tabletop.
 
-## Floating selection editor
+## Selection panel
 
-Click a wall panel or item in the viewer to open its floating editor, or use the **Selection editor** header button. Wall size/layout and artwork share one panel. Items expose position, dimensions, prop artwork, model uploads and layout tools together. Drag the header to reposition it; use minus to collapse or × to restore the controls to the sidebar. The editor follows selection, uses existing validation and undo, and is unavailable in read-only review links.
+Click a wall panel or item in the viewer to open it in the side panel on the right (a bottom sheet on phones), or use **Editor** in the scene toolbar. Wall size/layout and artwork share one panel. Items show position, dimensions, appearance and prop artwork; the library, model uploads and **Arrange items** tools stay in the Furnish tab. Use minus to collapse the panel or × to close it. The editor follows selection, uses existing validation and undo, and is unavailable in read-only review links.
