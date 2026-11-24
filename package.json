@@ -2,9 +2,9 @@
   "name": "booth-studio",
   "version": "1.0.0",
   "scripts": {
-    "build": "esbuild app.mjs --bundle --format=esm --minify --splitting --outdir=dist --entry-names=[name] --chunk-names=chunks/[name]-[hash]",
+    "build": "node scripts/build.mjs",
     "test": "node tests.mjs && node share-tests.mjs && node model-tests.mjs && node editing-tests.mjs && node branding-tests.mjs && node local-tests.mjs && node dragging-tests.mjs && node saving-tests.mjs && node tour-tests.mjs && node workflow-tests.mjs && node image-tests.mjs",
-    "dev": "node server.mjs",
+    "dev": "node scripts/build.mjs --watch",
     "local": "node server.mjs",
     "start": "node server.mjs"
   },
@@ -14,12 +14,14 @@
   "description": "AI-assisted local 3D exhibition booth configurator with branded concept PDFs and revision reviews.",
   "type": "module",
   "dependencies": {
-    "esbuild": "^0.25.11",
     "jspdf": "^4.2.1",
     "three": "^0.180.0"
   },
   "private": true,
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.11"
   }
 }

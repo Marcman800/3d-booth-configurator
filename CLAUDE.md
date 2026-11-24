@@ -4,7 +4,7 @@ This file is the onboarding map for **Forma Booth Studio**, an AI-assisted local
 
 ## Quick start
 
-Requirements: Node.js 20 or newer, npm, and a WebGL-capable browser.
+Requirements: Node.js 22 or newer (pinned in `.nvmrc`), npm, and a WebGL-capable browser.
 
 ```sh
 npm ci
@@ -17,13 +17,15 @@ Open <http://localhost:4174/>. The local server binds only to `127.0.0.1`. Keep 
 Useful commands:
 
 ```sh
-npm run dev       # Alias for the local server
-npm run local     # Alias for the local server
-npm run build     # Bundle app.mjs to dist/app.js plus lazy-loaded dist/chunks/
+npm run dev       # Rebuild on save (unminified, inline source maps) and restart the server on server-code changes
+npm run local     # Alias for npm start
+npm run build     # Minified bundle of app.mjs to dist/app.js plus lazy-loaded dist/chunks/ (scripts/build.mjs)
 npm test          # Run the unit/regression scripts
 ```
 
-`dist/app.js` and `dist/chunks/` are generated and ignored by Git. The PDF library (jsPDF and its optional helpers) is loaded with a dynamic `import()` and lives in hashed chunk files, which the server serves from `/chunks/`. Run the build after changing JavaScript source and before opening a fresh checkout in the app. The tracked browser sources are `dist/index.html` and `dist/style.css`. When changing their referenced JavaScript/CSS cache versions, update the `?v=` values in `dist/index.html`.
+`dist/app.js` and `dist/chunks/` are generated and ignored by Git. The PDF library (jsPDF and its optional helpers) is loaded with a dynamic `import()` and lives in hashed chunk files, which the server serves from `/chunks/`. Run the build (or keep `npm run dev` running) after changing JavaScript source and before opening a fresh checkout in the app. Each build clears `dist/chunks/` first. The tracked browser sources are `dist/index.html` and `dist/style.css`. There are no cache-busting `?v=` values: the server sends an ETag with `Cache-Control: no-cache` for app files, so a rebuild shows on the next reload, and marks hashed chunks as immutable.
+
+Local settings (`PORT`, `FORMA_DATA`) can go in a `.env` file, which `server.mjs` loads at startup; see `.env.example`. Shell variables take precedence. `.claude/launch.json` defines a `booth-studio` preview configuration that runs `npm run dev`.
 
 ## What the app currently does
 
@@ -77,7 +79,9 @@ flowchart TD
 | `dist/style.css` | Maintained app styling, dialog styling and responsive layout. |
 | `dist/app.js`, `dist/chunks/` | Generated esbuild bundle and code-split chunks; intentionally ignored and regenerated from `app.mjs`. Do not edit them by hand. |
 | `examples/sample-project.json` | Small importable project for trying the app without customer assets. |
-| `.github/workflows/ci.yml` | GitHub Actions workflow: Node 20, `npm ci`, `npm test`, then `npm run build` on pushes and pull requests. |
+| `scripts/build.mjs` | esbuild options shared by `npm run build` and the `npm run dev` watch loop. |
+| `.github/workflows/ci.yml` | GitHub Actions workflow: `npm ci`, `npm test`, then `npm run build` on Node 22 and 24, on pushes and pull requests. Superseded runs are cancelled. |
+| `.github/dependabot.yml` | Weekly grouped npm update PRs and monthly GitHub Actions updates. |
 | `README.md` | User-facing product features, quick start, print assumptions, limitations and workflows. |
 | `CHANGELOG.md` | Dated summary of user-visible and developer-relevant changes. Add an entry with each change set. |
 | `CONTRIBUTING.md`, `SECURITY.md` | Change workflow and local-only security guidance. |
@@ -201,11 +205,11 @@ Browser capability and GPU memory vary. An image that fits file-size limits can 
 5. For upload changes, enforce limits before expensive decoding, validate imported JSON server-side, and do not put user assets or private `.local-data` into Git.
 6. Build with `npm run build`; run the relevant script or full `npm test` for code changes. Inspect changes with `git diff --check` and review the rendered workflow in a WebGL browser when UI/3D output changes.
 7. Add a short entry to `CHANGELOG.md` and update `README.md`/this file when behaviour, UI or project structure changes.
-8. Do not hand-edit `dist/app.js` or `dist/chunks/`; they are generated. Update the `?v=` cache value in `dist/index.html` when changing the corresponding static JS/CSS entry point.
+8. Do not hand-edit `dist/app.js` or `dist/chunks/`; they are generated.
 
 ## Repository and release notes
 
-- The GitHub Actions workflow on push/PR runs `npm ci`, `npm test` and `npm run build` using Node.js 20.
+- The GitHub Actions workflow on push/PR runs `npm ci`, `npm test` and `npm run build` on Node.js 22 and 24. Dependabot opens dependency update PRs.
 - `package-lock.json` is the dependency lockfile; use `npm ci` for reproducible install.
 - `.local-data/`, `.env*`, keys, model/artwork uploads, and project backups are ignored or explicitly prohibited from commits.
 - The repository is marked `UNLICENSED`; public GitHub visibility does not grant reuse rights. Do not add a licence or claim open-source usage rights without the owner's decision.

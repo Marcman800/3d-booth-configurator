@@ -2,6 +2,17 @@
 
 Notable changes to Forma Booth Studio, newest first. Dates are when the change set was committed.
 
+## 2026-11-24 — Developer setup
+
+No app or project-file changes.
+
+- **Node 22.** Node 20 is past end-of-life. The project now requires Node 22 or newer, pins it in `.nvmrc`, and CI tests on Node 22 and 24.
+- **`npm run dev` rebuilds on save.** It watches the source, rebuilds an unminified bundle with source maps, and restarts the server when server code changes. Build options live in `scripts/build.mjs`, shared with `npm run build`, which now clears old chunk files first.
+- **No more `?v=` cache numbers.** The server sends ETags, so browsers pick up a new build on reload; hashed chunks are cached as immutable.
+- **`.env` support.** `server.mjs` reads `PORT` and `FORMA_DATA` from an optional `.env` file (see `.env.example`); shell variables still win.
+- **Dependencies.** esbuild moved to `devDependencies`. Dependabot opens grouped weekly npm updates and monthly GitHub Actions updates. CI cancels superseded runs.
+- **Claude Code.** `.claude/launch.json` adds a `booth-studio` preview configuration.
+
 ## 2026-11-18 — Interface redesign
 
 A less cluttered, easier-to-navigate editor. No project-file format changes; existing projects open as before.

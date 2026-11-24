@@ -1,11 +1,13 @@
 // Local evaluation server only. Bind loopback: no account or payment authentication.
 import http from 'node:http';
 import {reviewStatus,reviewContent} from './workspace.mjs';
-import {readFile,writeFile,mkdir,rename} from 'node:fs/promises';
+import {readFile,writeFile,mkdir,rename,stat} from 'node:fs/promises';
 import {randomBytes,createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {validate} from './geometry.mjs';
 const root=fileURLToPath(new URL('.',import.meta.url));
+// Optional local settings (PORT, FORMA_DATA) from .env; variables already set in the shell win. See .env.example.
+try{process.loadEnvFile(root+'.env');}catch(e){if(e.code!=='ENOENT')throw e;}
 const dir=process.env.FORMA_DATA||root+'.local-data';await mkdir(dir,{recursive:true});
 const DB=dir+'/reviews.json',BACKUPS=3,BACKUP_EVERY=10*60*1000;
 // Loads the database. A missing main file falls back to the newest backup (a crash between backup rotation and rename); a damaged main file stops startup instead of being replaced.
@@ -45,7 +47,10 @@ const server=http.createServer(async(req,res)=>{
  try{path=new URL(req.url,'http://localhost').pathname;
  if(!['localhost','127.0.0.1'].includes((req.headers.host||'').split(':')[0]))return send(403,{error:'Local access only'});
  if(req.method==='POST'&&req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`)return send(403,{error:'Origin rejected'});
- if(!path.startsWith('/api/')){if(req.method!=='GET')return send(405,{error:'Method not allowed'});const file=STATIC[path]||(/^\/chunks\/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*\.js$/.test(path)?'dist'+path:null);if(!file)return send(404,{error:'Not found'});const data=await readFile(root+file);res.writeHead(200,{'Content-Type':TYPES[file.split('.').pop()],'Cache-Control':'no-cache'});return res.end(data);}
+ if(!path.startsWith('/api/')){if(req.method!=='GET')return send(405,{error:'Method not allowed'});const file=STATIC[path]||(/^\/chunks\/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*\.js$/.test(path)?'dist'+path:null);if(!file)return send(404,{error:'Not found'});// Hashed chunks never change, so the browser may keep them; everything else is revalidated with an ETag, so a rebuild shows up on the next reload without cache-busting query strings.
+ const info=await stat(root+file),etag=`W/"${info.size.toString(36)}-${Math.floor(info.mtimeMs).toString(36)}"`,cache=file.startsWith('dist/chunks/')?'max-age=31536000, immutable':'no-cache';
+ if(req.headers['if-none-match']===etag){res.writeHead(304,{ETag:etag,'Cache-Control':cache});return res.end();}
+ const data=await readFile(root+file);res.writeHead(200,{'Content-Type':TYPES[file.split('.').pop()],'Cache-Control':cache,ETag:etag});return res.end(data);}
  if(req.method==='POST'){if(!req.headers['content-type']?.startsWith('application/json'))return send(415,{error:'JSON required'});const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>MAX_BODY){res.setHeader('Connection','close');return send(413,{error:'Project exceeds 60 MB'});}chunks.push(chunk);}body=JSON.parse(Buffer.concat(chunks,size).toString('utf8')||'{}');}
  }catch(e){return send(400,{error:e.message});}
  const run=()=>handle(req,path,body,send).catch(e=>send(400,{error:e.message}));

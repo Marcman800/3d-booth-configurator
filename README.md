@@ -24,7 +24,7 @@ See [CHANGELOG.md](CHANGELOG.md) for recent changes.
 
 ## Quick start
 
-Requires **Node.js 20 or newer**, npm and a modern browser with WebGL.
+Requires **Node.js 22 or newer** (the version is pinned in `.nvmrc`; with nvm, run `nvm use`), npm and a modern browser with WebGL.
 
 ```sh
 npm ci
@@ -41,7 +41,9 @@ npm test
 npm run build
 ```
 
-`npm run dev` and `npm run local` also start the local server. Rebuild after changing JavaScript source. `PORT=4180 npm start` changes the port; browser recovery storage is separate for each origin/port.
+While working on the code, run `npm run dev` instead. It rebuilds the app every time you save and restarts the server when server code changes; reload the browser to see the change. `npm start` (or `npm run local`) only serves the last build, so run `npm run build` first.
+
+`PORT=4180 npm start` changes the port. To keep settings, copy `.env.example` to `.env` and edit `PORT` or `FORMA_DATA` there; variables set in the shell take precedence. Browser recovery storage is separate for each origin/port.
 
 ## Try a design
 
