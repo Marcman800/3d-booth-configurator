@@ -92,4 +92,6 @@ async function handle(req,path,body,send){
  }}
  return send(404,{error:'Not found'});
 }
-server.listen(Number(process.env.PORT||4174),'127.0.0.1',()=>console.log(`Forma local workspace: http://localhost:${server.address().port}`));
+// Exported so the desktop shell (desktop/main.mjs) can wait for the server, or report a port that is already in use.
+export {server};
+export const listening=new Promise((resolve,reject)=>{server.once('error',reject);server.listen(Number(process.env.PORT||4174),'127.0.0.1',()=>{server.off('error',reject);console.log(`Forma local workspace: http://localhost:${server.address().port}`);resolve(server);});});

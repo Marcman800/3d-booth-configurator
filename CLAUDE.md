@@ -21,6 +21,8 @@ npm run dev       # Rebuild on save (unminified, inline source maps) and restart
 npm run local     # Alias for npm start
 npm run build     # Minified bundle of app.mjs to dist/app.js plus lazy-loaded dist/chunks/ (scripts/build.mjs)
 npm test          # Run the unit/regression scripts
+npm run desktop   # Build and open the Electron desktop prototype
+npm run desktop:package  # Unsigned app for this platform in out/ (ignored by Git)
 ```
 
 `dist/app.js` and `dist/chunks/` are generated and ignored by Git. The PDF library (jsPDF and its optional helpers) is loaded with a dynamic `import()` and lives in hashed chunk files, which the server serves from `/chunks/`. Run the build (or keep `npm run dev` running) after changing JavaScript source and before opening a fresh checkout in the app. Each build clears `dist/chunks/` first. The tracked browser sources are `dist/index.html` and `dist/style.css`. There are no cache-busting `?v=` values: the server sends an ETag with `Cache-Control: no-cache` for app files, so a rebuild shows on the next reload, and marks hashed chunks as immutable.
@@ -79,6 +81,8 @@ flowchart TD
 | `dist/style.css` | Maintained app styling, dialog styling and responsive layout. |
 | `dist/app.js`, `dist/chunks/` | Generated esbuild bundle and code-split chunks; intentionally ignored and regenerated from `app.mjs`. Do not edit them by hand. |
 | `examples/sample-project.json` | Small importable project for trying the app without customer assets. |
+| `desktop/main.mjs` | Electron desktop prototype (`package.json` `main`). Imports `server.mjs` in-process on fixed port 4874 (a stable origin keeps the IndexedDB draft), sets `FORMA_DATA` to the app-data folder, waits on the server's exported `listening` promise, and opens a sandboxed, context-isolated window. Same-origin popups open as app windows, other links in the default browser; it supplies the unsaved-changes prompt Electron doesn't show. |
+| `scripts/package-desktop.mjs` | Packages the desktop app with `@electron/packager` from an allowlist (root modules minus tests, `desktop/`, `dist/`, `examples/`, `node_modules/three`). Unsigned. |
 | `scripts/build.mjs` | esbuild options shared by `npm run build` and the `npm run dev` watch loop. |
 | `.github/workflows/ci.yml` | GitHub Actions workflow: `npm ci`, `npm test`, then `npm run build` on Node 22 and 24, on pushes and pull requests. Superseded runs are cancelled. |
 | `.github/dependabot.yml` | Weekly grouped npm update PRs and monthly GitHub Actions updates. |
@@ -209,6 +213,7 @@ Browser capability and GPU memory vary. An image that fits file-size limits can 
 
 ## Repository and release notes
 
+- `npm ci` needs Node 22 or newer because Electron's installer does. CI sets `ELECTRON_SKIP_BINARY_DOWNLOAD=1`, since it doesn't run the desktop app.
 - The GitHub Actions workflow on push/PR runs `npm ci`, `npm test` and `npm run build` on Node.js 22 and 24. Dependabot opens dependency update PRs.
 - `package-lock.json` is the dependency lockfile; use `npm ci` for reproducible install.
 - `.local-data/`, `.env*`, keys, model/artwork uploads, and project backups are ignored or explicitly prohibited from commits.

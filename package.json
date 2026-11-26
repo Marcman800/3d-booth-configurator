@@ -6,7 +6,9 @@
     "test": "node tests.mjs && node share-tests.mjs && node model-tests.mjs && node editing-tests.mjs && node branding-tests.mjs && node local-tests.mjs && node dragging-tests.mjs && node saving-tests.mjs && node tour-tests.mjs && node workflow-tests.mjs && node image-tests.mjs",
     "dev": "node scripts/build.mjs --watch",
     "local": "node server.mjs",
-    "start": "node server.mjs"
+    "start": "node server.mjs",
+    "desktop": "npm run build && electron .",
+    "desktop:package": "npm run build && node scripts/package-desktop.mjs"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +24,10 @@
     "node": ">=22"
   },
   "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^45.5.0",
     "esbuild": "^0.25.11"
-  }
+  },
+  "main": "desktop/main.mjs",
+  "productName": "Forma Booth Studio"
 }

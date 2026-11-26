@@ -6,6 +6,8 @@ Do not bind the server to public interfaces, expose it through a tunnel, or depl
 
 Defence-in-depth already in place: the server rejects requests whose `Host` is not `localhost`/`127.0.0.1` (blocks DNS rebinding), rejects cross-origin POSTs, and sends a Content Security Policy (scripts only from the app itself, no framing, no plugins), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` and `Referrer-Policy: no-referrer`. The policy allows Google Fonts stylesheets and font files; update `SECURITY_HEADERS` in `server.mjs` if the app starts loading anything from another host. Imported project images are checked against the same format, byte and pixel limits as uploads.
 
+The desktop prototype (`desktop/main.mjs`) runs the same loopback server on `127.0.0.1:4874`. Its pages have no Node access (context isolation, sandbox), links to other sites open in the default browser, and `scripts/package-desktop.mjs` packages from an allowlist so private data cannot be bundled into the app.
+
 Keep `.local-data`, backups, uploaded assets and credentials out of Git. The SHA-256 snapshot digest is not a digital signature or tamper-proof audit trail. Storage is not encrypted by the app.
 
 For a suspected vulnerability, do not attach private assets, credentials or exploit details to a public issue. No dedicated private reporting channel is configured yet; use GitHub private vulnerability reporting if the repository owner enables it.

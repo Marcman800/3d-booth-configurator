@@ -2,6 +2,12 @@
 
 Notable changes to Forma Booth Studio, newest first. Dates are when the change set was committed.
 
+## 2026-11-26 — Desktop app prototype
+
+- **Desktop app.** `npm run desktop` opens Forma in its own window (Electron), and `npm run desktop:package` builds an unsigned app for the current platform in `out/`. The app runs the existing local server inside itself on port 4874, saves projects in the system's app-data folder, and adds **File → Show Saved Projects Folder** and an unsaved-changes prompt on close. Not yet signed, notarised or auto-updating.
+- `server.mjs` exports `server` and a `listening` promise so the desktop shell can wait for it or report a port in use. Running it with `npm start` is unchanged.
+- `npm ci` now needs Node 22, which Electron's installer requires. CI skips the Electron download.
+
 ## 2026-11-24 — Developer setup
 
 No app or project-file changes.

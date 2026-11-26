@@ -45,6 +45,17 @@ While working on the code, run `npm run dev` instead. It rebuilds the app every 
 
 `PORT=4180 npm start` changes the port. To keep settings, copy `.env.example` to `.env` and edit `PORT` or `FORMA_DATA` there; variables set in the shell take precedence. Browser recovery storage is separate for each origin/port.
 
+## Desktop app (prototype)
+
+Forma can also run as a desktop app, so nobody needs a terminal or browser tab. The desktop app runs the same local server inside the app and keeps saved projects in the system's app-data folder (on macOS, `~/Library/Application Support/Forma Booth Studio/data`). Open it from **File → Show Saved Projects Folder**.
+
+```sh
+npm run desktop           # build, then open the app window
+npm run desktop:package   # build an app for this computer in out/
+```
+
+The packaged app is **unsigned** and meant for testing on your own computer. Sharing it with others needs code signing (and notarisation on macOS), otherwise their system will warn or block it. There are no auto-updates or installers yet. The desktop app uses port 4874 on `127.0.0.1`, so it can run alongside `npm start`. To use projects saved by the browser version, start it with `FORMA_DATA` pointing at your `.local-data` folder. Review and preview links still point at this computer, so they only open on it.
+
 ## Try a design
 
 1. Choose booth dimensions and panels under **Space**.

@@ -20,3 +20,6 @@ coverage/
 .DS_Store
 .idea/
 .vscode/
+
+# Packaged desktop app
+out/
